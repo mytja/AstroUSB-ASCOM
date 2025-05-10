@@ -445,8 +445,8 @@ namespace ASCOM.mytjaAstroUSB.Switch
             // set by the driver wizard
             get
             {
-                LogMessage("InterfaceVersion Get", "3");
-                return Convert.ToInt16("3");
+                LogMessage("InterfaceVersion Get", "2");
+                return Convert.ToInt16("2");
             }
         }
 
