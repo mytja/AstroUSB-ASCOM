@@ -62,7 +62,8 @@ namespace ASCOM.mytjaAstroUSB.Switch
         internal static Task task;
         internal static CancellationTokenSource cts = new CancellationTokenSource();
 
-        internal const int timeout = 2000;
+        internal const int timeout = 1000;
+        internal const int repeat = 7;
 
         /// <summary>
         /// Initializes a new instance of the device Hardware class.
@@ -340,7 +341,7 @@ namespace ASCOM.mytjaAstroUSB.Switch
                     objSerial.Connected = true;
 
                     bool success = false;
-                    for (int retries = 3; retries > 0; retries--)
+                    for (int retries = repeat; retries > 0; retries--)
                     {
                         string response = "";
                         try
@@ -458,7 +459,7 @@ namespace ASCOM.mytjaAstroUSB.Switch
             // TODO customise this device name as required
             get
             {
-                string name = "Short driver name - please customise";
+                string name = "AstroUSB";
                 LogMessage("Name Get", name);
                 return name;
             }
@@ -812,9 +813,9 @@ namespace ASCOM.mytjaAstroUSB.Switch
                 serial.ClearBuffers();
 
                 // Poll the device (with a short timeout value) until successful,
-                // or until we've reached the retry count limit of 3...
+                // or until we've reached the retry count limit of 10...
                 bool success = false;
-                for (int retries = 3; retries > 0; retries--)
+                for (int retries = repeat; retries > 0; retries--)
                 {
                     string response = "";
                     try
