@@ -62,7 +62,7 @@ namespace ASCOM.mytjaAstroUSB.Switch
         internal static Task task;
         internal static CancellationTokenSource cts = new CancellationTokenSource();
 
-        internal const int timeout = 1000;
+        internal const int timeout = 2000;
         internal const int repeat = 7;
 
         /// <summary>
@@ -308,77 +308,77 @@ namespace ASCOM.mytjaAstroUSB.Switch
                 {
                     if (autoDetectComPort)
                     {
-                        comPort = DetectCOMPort();
+                        objSerial = DetectCOMPort();
                     }
 
                     // Fallback, in case of detection error...
-                    if (comPort == null)
+                    if (objSerial == null)
                     {
                         comPort = comPortDefault;
-                    }
 
-                    if (!System.IO.Ports.SerialPort.GetPortNames().Contains(comPort))
-                    {
-                        if (!(objSerial is null)) objSerial.Connected = false;
-                        connectedState = false;
-                        throw new InvalidValueException("Invalid COM port", comPort.ToString(), String.Join(", ", System.IO.Ports.SerialPort.GetPortNames()));
-                    }
-
-                    LogMessage("Connected Set", "Connecting to port {0}", comPort);
-
-                    objSerial = new Serial
-                    {
-                        PortName = comPort,
-                        Speed = SerialSpeed.ps115200,
-                        Parity = SerialParity.None,
-                        DataBits = 8,
-                        StopBits = SerialStopBits.One,
-                        Handshake = SerialHandshake.None,
-                        ReceiveTimeoutMs = timeout,
-                        DTREnable = true,
-                        RTSEnable = true,
-                    };
-                    objSerial.Connected = true;
-
-                    bool success = false;
-                    for (int retries = repeat; retries > 0; retries--)
-                    {
-                        string response = "";
-                        try
+                        if (!System.IO.Ports.SerialPort.GetPortNames().Contains(comPort))
                         {
-                            Send("FWINFO\n");
-                            response = objSerial.ReceiveTerminated("\n").Trim();
+                            if (!(objSerial is null)) objSerial.Connected = false;
+                            connectedState = false;
+                            throw new InvalidValueException("Invalid COM port", comPort.ToString(), String.Join(", ", System.IO.Ports.SerialPort.GetPortNames()));
                         }
-                        catch (Exception e)
-                        {
-                            LogMessage("Connected Set", $"Error while connecting to port {comPort}: {e}");
-                            // PortInUse or Timeout exceptions may happen here!
-                            // We ignore them.
-                        }
-                        LogMessage("Connected Set", $"Response on port {comPort}: {response}");
-                        if (response.StartsWith("AstroUSB"))
-                        {
-                            LogMessage("Connected Set", $"Successfully connected to port {comPort}!");
-                            success = true;
-                            break;
-                        }
-                    }
 
-                    if (!success)
-                    {
-                        objSerial.Connected = false;
-                        objSerial.Dispose();
-                        objSerial = null;
-                        connectedState = false;
-                        throw new ASCOM.NotConnectedException("Failed to connect");
-                    }
+                        LogMessage("Connected Set", "Connecting to port {0}", comPort);
 
-                    for (int id = 0; id < switches.Count; id++)
-                    {
-                        objSerial.Transmit($"STATEGET;{switches[id].InternalID}\n");
-                        switches[id].Value = int.Parse(objSerial.ReceiveTerminated("\n").Trim());
+                        objSerial = new Serial
+                        {
+                            PortName = comPort,
+                            Speed = SerialSpeed.ps115200,
+                            Parity = SerialParity.None,
+                            DataBits = 8,
+                            StopBits = SerialStopBits.One,
+                            Handshake = SerialHandshake.None,
+                            ReceiveTimeoutMs = timeout,
+                            DTREnable = true,
+                            RTSEnable = true,
+                        };
+                        objSerial.Connected = true;
+
+                        bool success = false;
+                        for (int retries = repeat; retries > 0; retries--)
+                        {
+                            string response = "";
+                            try
+                            {
+                                Send("FWINFO\n");
+                                response = objSerial.ReceiveTerminated("\n").Trim();
+                            }
+                            catch (Exception e)
+                            {
+                                LogMessage("Connected Set", $"Error while connecting to port {comPort}: {e}");
+                                // PortInUse or Timeout exceptions may happen here!
+                                // We ignore them.
+                            }
+                            LogMessage("Connected Set", $"Response on port {comPort}: {response}");
+                            if (response.StartsWith("AstroUSB"))
+                            {
+                                LogMessage("Connected Set", $"Successfully connected to port {comPort}!");
+                                success = true;
+                                break;
+                            }
+                        }
+
+                        if (!success)
+                        {
+                            objSerial.Connected = false;
+                            objSerial.Dispose();
+                            objSerial = null;
+                            connectedState = false;
+                            throw new ASCOM.NotConnectedException("Failed to connect");
+                        }
+
+                        for (int id = 0; id < switches.Count; id++)
+                        {
+                            objSerial.Transmit($"STATEGET;{switches[id].InternalID}\n");
+                            switches[id].Value = int.Parse(objSerial.ReceiveTerminated("\n").Trim());
+                        }
+                        connectedState = true;
                     }
-                    connectedState = true;
 
                     task = Task.Run(UpdateFrequent);
                 }
@@ -776,7 +776,7 @@ namespace ASCOM.mytjaAstroUSB.Switch
             return switches;
         }
 
-        internal static string DetectCOMPort()
+        internal static Serial DetectCOMPort()
         {
             LogMessage("DetectCOMPort", $"Serial Ports {String.Join(",", SerialPort.GetPortNames())}");
             foreach (string portName in SerialPort.GetPortNames())
@@ -837,14 +837,15 @@ namespace ASCOM.mytjaAstroUSB.Switch
                     }
                 }
 
-                serial.Connected = false;
-                serial.Dispose();
-
                 if (success)
                 {
                     LogMessage("DetectCOMPort", $"Port {portName} OK!");
-                    return portName;
+                    connectedState = true;
+                    return serial;
                 }
+
+                serial.Connected = false;
+                serial.Dispose();
             }
 
             return null;
