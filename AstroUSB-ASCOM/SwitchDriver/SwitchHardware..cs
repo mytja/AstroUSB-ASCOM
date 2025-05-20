@@ -62,7 +62,7 @@ namespace ASCOM.mytjaAstroUSB.Switch
         internal static Task task;
         internal static CancellationTokenSource cts = new CancellationTokenSource();
 
-        internal const int timeout = 2000;
+        internal const int timeout = 3000;
         internal const int repeat = 7;
 
         /// <summary>
@@ -371,14 +371,14 @@ namespace ASCOM.mytjaAstroUSB.Switch
                             connectedState = false;
                             throw new ASCOM.NotConnectedException("Failed to connect");
                         }
-
-                        for (int id = 0; id < switches.Count; id++)
-                        {
-                            objSerial.Transmit($"STATEGET;{switches[id].InternalID}\n");
-                            switches[id].Value = int.Parse(objSerial.ReceiveTerminated("\n").Trim());
-                        }
-                        connectedState = true;
                     }
+
+                    for (int id = 0; id < switches.Count; id++)
+                    {
+                        objSerial.Transmit($"STATEGET;{switches[id].InternalID}\n");
+                        switches[id].Value = int.Parse(objSerial.ReceiveTerminated("\n").Trim());
+                    }
+                    connectedState = true;
 
                     task = Task.Run(UpdateFrequent);
                 }
@@ -859,12 +859,13 @@ namespace ASCOM.mytjaAstroUSB.Switch
                 //await Task.Delay(2000);
                 //cts.Token.ThrowIfCancellationRequested();
                 //Send("PING\n");
+                Send("ACK\n");
                 String response = objSerial.ReceiveTerminated("\n").Trim();
-                if (!(response == "PONG" || response == "PING"))
+                if (!(response == "OK"))
                 {
                     Connected = false;
                 }
-                await Task.Delay(100);
+                await Task.Delay(3000);
             }
         }
 

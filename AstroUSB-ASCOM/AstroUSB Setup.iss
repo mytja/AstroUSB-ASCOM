@@ -5,13 +5,13 @@
 [Setup]
 AppID={{35848087-4ed8-4e5b-8663-3fea97d50178}
 AppName=ASCOM AstroUSB Switch Driver
-AppVerName=ASCOM AstroUSB Switch Driver 1.0.0
-AppVersion=1.0.0
+AppVerName=ASCOM AstroUSB Switch Driver 1.0.1
+AppVersion=1.0.1
 AppPublisher=Mitja Ševerkar <mitja@severkar.eu>
 AppPublisherURL=mailto:mitja@severkar.eu
 AppSupportURL=https://github.com/mytja/AstroUSB-ASCOM/issues
 AppUpdatesURL=https://github.com/mytja/AstroUSB-ASCOM/releases
-VersionInfoVersion=1.0.0
+VersionInfoVersion=1.0.1
 MinVersion=6.1.7601
 DefaultDirName="{cf}\ASCOM\Switch"
 DisableDirPage=yes
